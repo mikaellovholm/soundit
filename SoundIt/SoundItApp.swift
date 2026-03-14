@@ -7,24 +7,36 @@ struct SoundItApp: App {
 
     init() {
         FirebaseApp.configure()
+        SoundItAppearance.configure()
         _authManager = State(initialValue: AuthManager())
     }
 
     var body: some Scene {
         WindowGroup {
-            if authManager.isLoading {
-                ProgressView()
-            } else {
-                ContentView(
-                    viewModel: SoundViewModel(
-                        service: APIVideoService(
-                            baseURL: APIConfig.baseURL,
-                            authManager: authManager
-                        )
-                    ),
-                    authManager: authManager
-                )
+            Group {
+                if authManager.isLoading {
+                    ZStack {
+                        SoundItGradients.posterFade.ignoresSafeArea()
+                        VStack(spacing: SoundItSpacing.lg) {
+                            SoundItLogo(size: 40)
+                            ProgressView()
+                                .tint(SoundItColors.mustardGold)
+                                .controlSize(.large)
+                        }
+                    }
+                } else {
+                    ContentView(
+                        viewModel: SoundViewModel(
+                            service: APIVideoService(
+                                baseURL: APIConfig.baseURL,
+                                authManager: authManager
+                            )
+                        ),
+                        authManager: authManager
+                    )
+                }
             }
+            .preferredColorScheme(.dark)
         }
     }
 }

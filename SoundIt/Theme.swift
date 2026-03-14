@@ -151,6 +151,80 @@ struct SoundItStatusBadge: View {
     }
 }
 
+// MARK: - Logo
+
+struct SoundItLogo: View {
+    var size: CGFloat = 24
+
+    private var font: Font {
+        .system(size: size, weight: .black, design: .default).width(.expanded)
+    }
+
+    var body: some View {
+        ZStack {
+            // 3D extrusion shadow
+            Text("SOUND IT")
+                .font(font)
+                .italic()
+                .tracking(size * 0.08)
+                .foregroundStyle(SoundItColors.shaftPurple.opacity(0.4))
+                .offset(x: size * -0.08, y: size * 0.08)
+            // Mid layer
+            Text("SOUND IT")
+                .font(font)
+                .italic()
+                .tracking(size * 0.08)
+                .foregroundStyle(SoundItColors.shaftPurple.opacity(0.7))
+                .offset(x: size * -0.04, y: size * 0.04)
+            // Main text
+            Text("SOUND IT")
+                .font(font)
+                .italic()
+                .tracking(size * 0.08)
+                .foregroundStyle(SoundItColors.hotWhite)
+        }
+    }
+}
+
+struct SoundItDestructiveButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(SoundItFont.button())
+            .textCase(.uppercase)
+            .tracking(1)
+            .foregroundStyle(SoundItColors.hotWhite)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .background(SoundItColors.coffyRed)
+            .clipShape(RoundedRectangle(cornerRadius: SoundItRadius.button))
+            .opacity(configuration.isPressed ? 0.85 : 1)
+    }
+}
+
+// MARK: - Appearance
+
+enum SoundItAppearance {
+    static func configure() {
+        let navAppearance = UINavigationBarAppearance()
+        navAppearance.configureWithOpaqueBackground()
+        navAppearance.backgroundColor = UIColor(SoundItColors.midnight)
+        navAppearance.titleTextAttributes = [.foregroundColor: UIColor(SoundItColors.hotWhite)]
+        navAppearance.largeTitleTextAttributes = [
+            .foregroundColor: UIColor(SoundItColors.hotWhite),
+            .font: UIFont.systemFont(ofSize: 34, weight: .black)
+        ]
+        UINavigationBar.appearance().standardAppearance = navAppearance
+        UINavigationBar.appearance().scrollEdgeAppearance = navAppearance
+        UINavigationBar.appearance().compactAppearance = navAppearance
+        UINavigationBar.appearance().tintColor = UIColor(SoundItColors.cream)
+
+        let segmented = UISegmentedControl.appearance()
+        segmented.selectedSegmentTintColor = UIColor(SoundItColors.coffyRed)
+        segmented.setTitleTextAttributes([.foregroundColor: UIColor(SoundItColors.hotWhite)], for: .selected)
+        segmented.setTitleTextAttributes([.foregroundColor: UIColor(SoundItColors.cream)], for: .normal)
+        segmented.backgroundColor = UIColor(SoundItColors.midnight)
+    }
+}
+
 // MARK: - View Extensions
 
 extension View {
@@ -160,6 +234,10 @@ extension View {
 
     func soundItBackground() -> some View {
         self.background(SoundItGradients.posterFade.ignoresSafeArea())
+    }
+
+    func soundItCardShadow() -> some View {
+        self.shadow(color: SoundItColors.midnight.opacity(0.6), radius: 12, y: 6)
     }
 }
 

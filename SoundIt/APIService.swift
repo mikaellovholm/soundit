@@ -152,7 +152,7 @@ struct APIVideoService: VideoServiceProtocol {
 
         body.appendMultipart("--\(boundary)\r\n")
         body.appendMultipart("Content-Disposition: form-data; name=\"format\"\r\n\r\n")
-        body.appendMultipart(format == .reels ? "reels" : "feed")
+        body.appendMultipart(format.apiValue)
         body.appendMultipart("\r\n")
 
         body.appendMultipart("--\(boundary)--\r\n")

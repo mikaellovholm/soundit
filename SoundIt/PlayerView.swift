@@ -12,50 +12,58 @@ struct PlayerView: View {
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 16) {
+            VStack(spacing: SoundItSpacing.md) {
                 if let player {
                     VideoPlayer(player: player)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .shadow(radius: 8)
+                        .clipShape(RoundedRectangle(cornerRadius: SoundItRadius.card))
+                        .soundItCardShadow()
                 } else {
-                    ContentUnavailableView("No Video", systemImage: "film")
+                    VStack(spacing: SoundItSpacing.md) {
+                        Image(systemName: "film")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundStyle(SoundItColors.leather)
+                        Text("NO VIDEO")
+                            .font(SoundItFont.headline())
+                            .foregroundStyle(SoundItColors.smoke)
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
 
                 if let errorMessage {
                     Text(errorMessage)
-                        .font(.callout)
-                        .foregroundStyle(.red)
+                        .font(SoundItFont.body())
+                        .foregroundStyle(SoundItColors.coffyRed)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal)
+                        .padding(.horizontal, SoundItSpacing.md)
                 }
 
                 if savedToPhotos {
                     Label("Saved to Photos", systemImage: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .font(SoundItFont.caption())
+                        .foregroundStyle(SoundItColors.success)
                 }
 
                 Spacer()
 
-                VStack(spacing: 12) {
+                VStack(spacing: SoundItSpacing.sm) {
                     Button {
                         saveToPhotos()
                     } label: {
                         Label("Save to Photos", systemImage: "square.and.arrow.down")
-                            .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(SoundItPrimaryButtonStyle())
 
                     Button {
                         showShareSheet = true
                     } label: {
                         Label("Share", systemImage: "square.and.arrow.up")
-                            .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(SoundItSecondaryButtonStyle())
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, SoundItSpacing.md)
             }
-            .padding()
+            .padding(SoundItSpacing.md)
+            .soundItBackground()
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

@@ -3,14 +3,24 @@ import UIKit
 
 enum VideoFormat: String, CaseIterable, Identifiable {
     case reels = "Reels / Stories"
-    case feed = "Feed"
+    case feedPortrait = "Feed 3:4"
+    case feedSquare = "Feed 4:5"
 
     var id: String { rawValue }
 
     var size: CGSize {
         switch self {
         case .reels: CGSize(width: 1080, height: 1920)
-        case .feed: CGSize(width: 1920, height: 1080)
+        case .feedPortrait: CGSize(width: 1080, height: 1440)
+        case .feedSquare: CGSize(width: 1080, height: 1350)
+        }
+    }
+
+    var apiValue: String {
+        switch self {
+        case .reels: "reels"
+        case .feedPortrait: "feed_3_4"
+        case .feedSquare: "feed_4_5"
         }
     }
 }

@@ -32,6 +32,19 @@ final class ImageEntry: Identifiable {
     var thumbnail: UIImage? { images.first }
 }
 
+#if DEBUG
+extension UIImage {
+    static func solidColor(_ color: UIColor, size: CGSize) -> UIImage {
+        UIGraphicsBeginImageContextWithOptions(size, true, 1)
+        color.setFill()
+        UIRectFill(CGRect(origin: .zero, size: size))
+        let img = UIGraphicsGetImageFromCurrentImageContext()!
+        UIGraphicsEndImageContext()
+        return img
+    }
+}
+#endif
+
 // MARK: - Job Summary (for history)
 
 struct JobSummary: Identifiable, Decodable {

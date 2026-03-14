@@ -34,8 +34,16 @@ struct ContentView: View {
                     entryGrid
                 }
             }
+            .soundItBackground()
             .navigationTitle("SoundIt")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(SoundItColors.midnight, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
+                ToolbarItem(placement: .principal) {
+                    SoundItLogo(size: 20)
+                }
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button { activeSheet = .history } label: {
@@ -51,11 +59,13 @@ struct ContentView: View {
                         }
                     } label: {
                         Image(systemName: "person.circle")
+                            .fontWeight(.bold)
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showSourcePicker = true } label: {
                         Image(systemName: "plus")
+                            .fontWeight(.bold)
                     }
                 }
             }
@@ -105,10 +115,13 @@ struct ContentView: View {
                 switch sheet {
                 case .compose(let entry):
                     ComposeView(entry: entry, viewModel: viewModel)
+                        .presentationBackground(SoundItColors.cocoa)
                 case .player(let entry):
                     PlayerView(entry: entry)
+                        .presentationBackground(SoundItColors.cocoa)
                 case .history:
                     HistoryView(viewModel: viewModel)
+                        .presentationBackground(SoundItColors.cocoa)
                 }
             }
         }
@@ -117,16 +130,25 @@ struct ContentView: View {
     // MARK: - Subviews
 
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label("No Videos", systemImage: "film")
-        } description: {
+        VStack(spacing: SoundItSpacing.md) {
+            Image(systemName: "film")
+                .font(.system(size: 56, weight: .bold))
+                .foregroundStyle(SoundItColors.leather)
+            Text("NO VIDEOS")
+                .font(SoundItFont.headline())
+                .foregroundStyle(SoundItColors.smoke)
             Text("Tap + to add photos and generate a soundtrack video.")
+                .font(SoundItFont.body())
+                .foregroundStyle(SoundItColors.smoke)
+                .multilineTextAlignment(.center)
         }
+        .padding(SoundItSpacing.xl)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var entryGrid: some View {
         ScrollView {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: 12)], spacing: 12) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 150), spacing: SoundItSpacing.sm)], spacing: SoundItSpacing.sm) {
                 ForEach(viewModel.entries) { entry in
                     EntryCell(entry: entry)
                         .onTapGesture {
@@ -147,7 +169,7 @@ struct ContentView: View {
                         }
                 }
             }
-            .padding()
+            .padding(SoundItSpacing.md)
         }
     }
 }
@@ -168,12 +190,14 @@ private struct EntryCell: View {
 
                 if entry.images.count > 1 {
                     Text("\(entry.images.count)")
-                        .font(.caption2.bold())
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(.ultraThinMaterial)
-                        .clipShape(Capsule())
-                        .padding(6)
+                        .font(SoundItFont.caption(11))
+                        .fontWeight(.bold)
+                        .foregroundStyle(SoundItColors.cream)
+                        .padding(.horizontal, SoundItSpacing.xs)
+                        .padding(.vertical, SoundItSpacing.xxs)
+                        .background(SoundItColors.midnight.opacity(0.8))
+                        .clipShape(RoundedRectangle(cornerRadius: SoundItRadius.badge))
+                        .padding(SoundItSpacing.xs)
                 }
             }
 
@@ -181,35 +205,37 @@ private struct EntryCell: View {
                 switch entry.status {
                 case .idle:
                     Image(systemName: "pencil")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(SoundItColors.smoke)
                     Text("Tap to compose")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(SoundItFont.caption())
+                        .foregroundStyle(SoundItColors.smoke)
                 case .loading:
                     ProgressView()
                         .controlSize(.small)
+                        .tint(SoundItColors.mustardGold)
                     Text("Generating...")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(SoundItFont.caption())
+                        .foregroundStyle(SoundItColors.mustardGold)
                 case .ready:
                     Image(systemName: "film")
-                        .foregroundStyle(Color.accentColor)
+                        .foregroundStyle(SoundItColors.mustardGold)
                     Text(entry.text)
-                        .font(.caption)
+                        .font(SoundItFont.caption())
+                        .foregroundStyle(SoundItColors.cream)
                         .lineLimit(1)
                 case .error:
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .foregroundStyle(.red)
+                        .foregroundStyle(SoundItColors.coffyRed)
                     Text("Failed")
-                        .font(.caption)
-                        .foregroundStyle(.red)
+                        .font(SoundItFont.caption())
+                        .foregroundStyle(SoundItColors.coffyRed)
                 }
                 Spacer()
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.horizontal, SoundItSpacing.xs)
+            .padding(.vertical, SoundItSpacing.xs)
         }
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .soundItCard()
+        .soundItCardShadow()
     }
 }

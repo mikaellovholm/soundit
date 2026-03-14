@@ -7,18 +7,23 @@ struct HistoryView: View {
         NavigationStack {
             List(viewModel.jobs) { job in
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: SoundItSpacing.xxs) {
                         Text(job.id)
-                            .font(.caption.monospaced())
+                            .font(SoundItFont.caption())
+                            .monospaced()
+                            .foregroundStyle(SoundItColors.cream)
                             .lineLimit(1)
                         Text(job.createdAt)
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
+                            .font(SoundItFont.caption(11))
+                            .foregroundStyle(SoundItColors.smoke)
                     }
                     Spacer()
-                    StatusBadge(status: job.status)
+                    SoundItStatusBadge(text: job.status, color: statusColor(for: job.status))
                 }
+                .listRowBackground(SoundItColors.cocoa)
             }
+            .scrollContentBackground(.hidden)
+            .soundItBackground()
             .navigationTitle("History")
             .navigationBarTitleDisplayMode(.inline)
             .task {
@@ -29,38 +34,28 @@ struct HistoryView: View {
             }
             .overlay {
                 if viewModel.jobs.isEmpty {
-                    ContentUnavailableView(
-                        "No Jobs",
-                        systemImage: "clock",
-                        description: Text("Generated videos will appear here.")
-                    )
+                    VStack(spacing: SoundItSpacing.md) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundStyle(SoundItColors.leather)
+                        Text("NO JOBS")
+                            .font(SoundItFont.headline())
+                            .foregroundStyle(SoundItColors.smoke)
+                        Text("Generated videos will appear here.")
+                            .font(SoundItFont.body())
+                            .foregroundStyle(SoundItColors.smoke)
+                    }
                 }
             }
         }
     }
-}
 
-// MARK: - Status Badge
-
-private struct StatusBadge: View {
-    let status: String
-
-    var body: some View {
-        Text(status.capitalized)
-            .font(.caption2.bold())
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
-            .background(color.opacity(0.15))
-            .foregroundStyle(color)
-            .clipShape(Capsule())
-    }
-
-    private var color: Color {
+    private func statusColor(for status: String) -> Color {
         switch status {
-        case "completed": .green
-        case "failed": .red
-        case "processing": .blue
-        default: .orange
+        case "completed": SoundItColors.success
+        case "failed": SoundItColors.error
+        case "processing", "pending": SoundItColors.processing
+        default: SoundItColors.foxyOrange
         }
     }
 }

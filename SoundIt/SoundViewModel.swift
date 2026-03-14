@@ -13,6 +13,28 @@ final class SoundViewModel {
         self.service = service
     }
 
+    #if DEBUG
+    static func preview() -> SoundViewModel {
+        let vm = SoundViewModel()
+        let colors: [(UIColor, String)] = [
+            (.systemOrange, "Sunset vibes"),
+            (.systemTeal, "Ocean chill"),
+            (.systemPurple, "Night drive"),
+            (.systemPink, "Dance floor"),
+        ]
+        for (i, (color, text)) in colors.enumerated() {
+            let img = UIImage.solidColor(color, size: CGSize(width: 400, height: 600))
+            let entry = ImageEntry(images: [img])
+            entry.text = text
+            if i == 0 { entry.isLoading = true }
+            if i == 1 { entry.videoFileURL = URL(string: "file:///tmp/mock.mp4") }
+            if i == 3 { entry.errorMessage = "Timed out" }
+            vm.entries.append(entry)
+        }
+        return vm
+    }
+    #endif
+
     @discardableResult
     func addImages(_ images: [UIImage]) -> ImageEntry {
         let entry = ImageEntry(images: images)
