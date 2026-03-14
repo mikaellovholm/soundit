@@ -3,10 +3,27 @@ import PhotosUI
 
 struct ContentView: View {
     @State var viewModel: SoundViewModel
-    @State private var selectedPhoto: PhotosPickerItem?
+    var authManager: AuthManager?
+    @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var showCamera = false
     @State private var showSourcePicker = false
-    @State private var selectedEntry: ImageEntry?
+    @State private var showPhotoPicker = false
+    @State private var activeSheet: SheetType?
+    @State private var pendingCameraEntry: ImageEntry?
+
+    enum SheetType: Identifiable {
+        case compose(ImageEntry)
+        case player(ImageEntry)
+        case history
+
+        var id: String {
+            switch self {
+            case .compose(let e): "compose-\(e.id)"
+            case .player(let e): "player-\(e.id)"
+            case .history: "history"
+            }
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -19,6 +36,23 @@ struct ContentView: View {
             }
             .navigationTitle("SoundIt")
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Menu {
+                        Button { activeSheet = .history } label: {
+                            Label("History", systemImage: "clock.arrow.circlepath")
+                        }
+                        if authManager != nil {
+                            Divider()
+                            Button(role: .destructive) {
+                                try? authManager?.signOut()
+                            } label: {
+                                Label("Sign Out", systemImage: "rectangle.portrait.and.arrow.right")
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "person.circle")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { showSourcePicker = true } label: {
                         Image(systemName: "plus")
@@ -26,29 +60,56 @@ struct ContentView: View {
                 }
             }
             .confirmationDialog("Add Photo", isPresented: $showSourcePicker) {
-                PhotosPicker("Photo Library", selection: $selectedPhoto, matching: .images)
+                Button("Photo Library") { showPhotoPicker = true }
                 if UIImagePickerController.isSourceTypeAvailable(.camera) {
                     Button("Camera") { showCamera = true }
                 }
             }
+            .photosPicker(
+                isPresented: $showPhotoPicker,
+                selection: $selectedPhotos,
+                maxSelectionCount: 20,
+                matching: .images
+            )
             .fullScreenCover(isPresented: $showCamera) {
                 CameraPicker { image in
-                    viewModel.addImage(image)
+                    let entry = viewModel.addImages([image])
+                    pendingCameraEntry = entry
                 }
                 .ignoresSafeArea()
             }
-            .onChange(of: selectedPhoto) { _, item in
-                guard let item else { return }
-                Task {
-                    if let data = try? await item.loadTransferable(type: Data.self),
-                       let image = UIImage(data: data) {
-                        viewModel.addImage(image)
-                    }
-                    selectedPhoto = nil
+            .onChange(of: showCamera) { old, new in
+                if old && !new, let entry = pendingCameraEntry {
+                    pendingCameraEntry = nil
+                    activeSheet = .compose(entry)
                 }
             }
-            .sheet(item: $selectedEntry) { entry in
-                PlayerView(entry: entry)
+            .onChange(of: selectedPhotos) { _, items in
+                guard !items.isEmpty else { return }
+                Task {
+                    var images: [UIImage] = []
+                    for item in items {
+                        if let data = try? await item.loadTransferable(type: Data.self),
+                           let image = UIImage(data: data) {
+                            images.append(image)
+                        }
+                    }
+                    if !images.isEmpty {
+                        let entry = viewModel.addImages(images)
+                        activeSheet = .compose(entry)
+                    }
+                    selectedPhotos = []
+                }
+            }
+            .sheet(item: $activeSheet) { sheet in
+                switch sheet {
+                case .compose(let entry):
+                    ComposeView(entry: entry, viewModel: viewModel)
+                case .player(let entry):
+                    PlayerView(entry: entry)
+                case .history:
+                    HistoryView(viewModel: viewModel)
+                }
             }
         }
     }
@@ -57,9 +118,9 @@ struct ContentView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("No Soundtracks", systemImage: "music.note")
+            Label("No Videos", systemImage: "film")
         } description: {
-            Text("Tap + to add a photo and generate a soundtrack.")
+            Text("Tap + to add photos and generate a soundtrack video.")
         }
     }
 
@@ -69,13 +130,18 @@ struct ContentView: View {
                 ForEach(viewModel.entries) { entry in
                     EntryCell(entry: entry)
                         .onTapGesture {
-                            if entry.status == .ready {
-                                selectedEntry = entry
+                            switch entry.status {
+                            case .idle, .error:
+                                activeSheet = .compose(entry)
+                            case .ready:
+                                activeSheet = .player(entry)
+                            case .loading:
+                                break
                             }
                         }
                         .contextMenu {
-                            if entry.status == .error {
-                                Button("Retry") { viewModel.retry(entry) }
+                            if entry.status == .error || entry.status == .idle {
+                                Button("Edit") { activeSheet = .compose(entry) }
                             }
                             Button("Delete", role: .destructive) { viewModel.delete(entry) }
                         }
@@ -93,16 +159,30 @@ private struct EntryCell: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            Image(uiImage: entry.image)
-                .resizable()
-                .scaledToFill()
-                .frame(height: 150)
-                .clipped()
+            ZStack(alignment: .topTrailing) {
+                Image(uiImage: entry.thumbnail ?? UIImage())
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 150)
+                    .clipped()
+
+                if entry.images.count > 1 {
+                    Text("\(entry.images.count)")
+                        .font(.caption2.bold())
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.ultraThinMaterial)
+                        .clipShape(Capsule())
+                        .padding(6)
+                }
+            }
 
             HStack {
                 switch entry.status {
                 case .idle:
-                    Text("Waiting...")
+                    Image(systemName: "pencil")
+                        .foregroundStyle(.secondary)
+                    Text("Tap to compose")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 case .loading:
@@ -112,9 +192,9 @@ private struct EntryCell: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 case .ready:
-                    Image(systemName: "music.note")
+                    Image(systemName: "film")
                         .foregroundStyle(Color.accentColor)
-                    Text(entry.soundtrack?.title ?? "")
+                    Text(entry.text)
                         .font(.caption)
                         .lineLimit(1)
                 case .error:

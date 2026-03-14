@@ -1,72 +1,59 @@
 import SwiftUI
-import AVFoundation
+import AVKit
+import Photos
 
 struct PlayerView: View {
     let entry: ImageEntry
-    @State private var player: AVAudioPlayer?
-    @State private var isPlaying = false
-    @State private var currentTime: TimeInterval = 0
-    @State private var duration: TimeInterval = 0
-    @State private var timer: Timer?
+    @State private var player: AVPlayer?
+    @State private var showShareSheet = false
+    @State private var savedToPhotos = false
+    @State private var errorMessage: String?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                Image(uiImage: entry.image)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(maxHeight: 300)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(radius: 8)
-                    .padding(.top)
-
-                Text(entry.soundtrack?.title ?? "")
-                    .font(.title2.bold())
-
-                // Progress bar
-                VStack(spacing: 4) {
-                    Slider(
-                        value: $currentTime,
-                        in: 0...max(duration, 1),
-                        onEditingChanged: { editing in
-                            if !editing {
-                                player?.currentTime = currentTime
-                            }
-                        }
-                    )
-                    .tint(.accentColor)
-
-                    HStack {
-                        Text(formatTime(currentTime))
-                        Spacer()
-                        Text(formatTime(duration))
-                    }
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .monospacedDigit()
+            VStack(spacing: 16) {
+                if let player {
+                    VideoPlayer(player: player)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .shadow(radius: 8)
+                } else {
+                    ContentUnavailableView("No Video", systemImage: "film")
                 }
-                .padding(.horizontal)
 
-                // Controls
-                HStack(spacing: 40) {
-                    Button { skip(by: -10) } label: {
-                        Image(systemName: "gobackward.10")
-                            .font(.title2)
-                    }
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(.callout)
+                        .foregroundStyle(.red)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                }
 
-                    Button { togglePlayPause() } label: {
-                        Image(systemName: isPlaying ? "pause.circle.fill" : "play.circle.fill")
-                            .font(.system(size: 56))
-                    }
-
-                    Button { skip(by: 10) } label: {
-                        Image(systemName: "goforward.10")
-                            .font(.title2)
-                    }
+                if savedToPhotos {
+                    Label("Saved to Photos", systemImage: "checkmark.circle.fill")
+                        .foregroundStyle(.green)
                 }
 
                 Spacer()
+
+                VStack(spacing: 12) {
+                    Button {
+                        saveToPhotos()
+                    } label: {
+                        Label("Save to Photos", systemImage: "square.and.arrow.down")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+
+                    Button {
+                        showShareSheet = true
+                    } label: {
+                        Label("Share", systemImage: "square.and.arrow.up")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding(.horizontal)
             }
             .padding()
             .navigationBarTitleDisplayMode(.inline)
@@ -75,71 +62,48 @@ struct PlayerView: View {
                     Button("Done") { dismiss() }
                 }
             }
+            .sheet(isPresented: $showShareSheet) {
+                if let url = entry.videoFileURL {
+                    ShareSheet(url: url)
+                }
+            }
         }
-        .onAppear(perform: setupPlayer)
-        .onDisappear(perform: cleanup)
-    }
-
-    // MARK: - Playback
-
-    private func setupPlayer() {
-        guard let data = entry.soundtrack?.audioData else { return }
-        do {
-            try AVAudioSession.sharedInstance().setCategory(.playback)
-            try AVAudioSession.sharedInstance().setActive(true)
-            player = try AVAudioPlayer(data: data)
-            player?.prepareToPlay()
-            duration = player?.duration ?? 0
-        } catch {
-            print("Audio setup failed: \(error)")
+        .onAppear {
+            if let url = entry.videoFileURL {
+                player = AVPlayer(url: url)
+            }
+        }
+        .onDisappear {
+            player?.pause()
+            player = nil
         }
     }
 
-    private func togglePlayPause() {
-        guard let player else { return }
-        if player.isPlaying {
-            player.pause()
-            stopTimer()
-            isPlaying = false
-        } else {
-            player.play()
-            startTimer()
-            isPlaying = true
-        }
-    }
-
-    private func skip(by seconds: TimeInterval) {
-        guard let player else { return }
-        let newTime = max(0, min(player.duration, player.currentTime + seconds))
-        player.currentTime = newTime
-        currentTime = newTime
-    }
-
-    private func startTimer() {
-        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { _ in
-            guard let player else { return }
-            currentTime = player.currentTime
-            if !player.isPlaying {
-                isPlaying = false
-                stopTimer()
+    private func saveToPhotos() {
+        guard let url = entry.videoFileURL else { return }
+        PHPhotoLibrary.shared().performChanges {
+            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+        } completionHandler: { success, error in
+            DispatchQueue.main.async {
+                if success {
+                    savedToPhotos = true
+                    errorMessage = nil
+                } else {
+                    errorMessage = error?.localizedDescription ?? "Failed to save"
+                }
             }
         }
     }
+}
 
-    private func stopTimer() {
-        timer?.invalidate()
-        timer = nil
+// MARK: - Share Sheet
+
+private struct ShareSheet: UIViewControllerRepresentable {
+    let url: URL
+
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: [url], applicationActivities: nil)
     }
 
-    private func cleanup() {
-        stopTimer()
-        player?.stop()
-        try? AVAudioSession.sharedInstance().setActive(false)
-    }
-
-    private func formatTime(_ time: TimeInterval) -> String {
-        let minutes = Int(time) / 60
-        let seconds = Int(time) % 60
-        return String(format: "%d:%02d", minutes, seconds)
-    }
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
