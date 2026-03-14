@@ -4,11 +4,16 @@ import SwiftUI
 @main
 struct SoundItApp: App {
     @State private var authManager: AuthManager
+    @State private var viewModel: SoundViewModel
 
     init() {
         FirebaseApp.configure()
         SoundItAppearance.configure()
-        _authManager = State(initialValue: AuthManager())
+        let auth = AuthManager()
+        _authManager = State(initialValue: auth)
+        _viewModel = State(initialValue: SoundViewModel(
+            service: APIVideoService(baseURL: APIConfig.baseURL, authManager: auth)
+        ))
     }
 
     var body: some Scene {
@@ -26,12 +31,7 @@ struct SoundItApp: App {
                     }
                 } else {
                     ContentView(
-                        viewModel: SoundViewModel(
-                            service: APIVideoService(
-                                baseURL: APIConfig.baseURL,
-                                authManager: authManager
-                            )
-                        ),
+                        viewModel: viewModel,
                         authManager: authManager
                     )
                 }

@@ -12,8 +12,8 @@ struct ComposeView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: SoundItSpacing.lg) {
-                    if entry.images.count == 1 {
-                        Image(uiImage: entry.images[0])
+                    if entry.imageCount == 1 {
+                        Image(uiImage: entry.thumbnails[0])
                             .resizable()
                             .scaledToFit()
                             .frame(maxHeight: 250)
@@ -23,7 +23,7 @@ struct ComposeView: View {
                     } else {
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: SoundItSpacing.xs) {
-                                ForEach(Array(entry.images.enumerated()), id: \.offset) { _, image in
+                                ForEach(Array(entry.thumbnails.enumerated()), id: \.offset) { _, image in
                                     Image(uiImage: image)
                                         .resizable()
                                         .scaledToFill()

@@ -1,5 +1,6 @@
 import SwiftUI
 import AVKit
+import AVFoundation
 import Photos
 
 struct PlayerView: View {
@@ -75,6 +76,8 @@ struct PlayerView: View {
             }
         }
         .onAppear {
+            try? AVAudioSession.sharedInstance().setCategory(.playback)
+            try? AVAudioSession.sharedInstance().setActive(true)
             player = AVPlayer(url: videoURL)
         }
         .onDisappear {

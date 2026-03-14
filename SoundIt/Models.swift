@@ -1,10 +1,13 @@
 import Foundation
+import ImageIO
 import UIKit
 
 @Observable
 final class ImageEntry: Identifiable {
     let id = UUID()
-    let images: [UIImage]
+    let thumbnails: [UIImage]
+    let uploadData: [Data]
+    let imageCount: Int
     let createdAt = Date()
 
     var text: String = ""
@@ -26,10 +29,12 @@ final class ImageEntry: Identifiable {
     }
 
     init(images: [UIImage]) {
-        self.images = images
+        imageCount = images.count
+        thumbnails = images.map { $0.downsampled(maxDimension: 400) }
+        uploadData = images.map { $0.downsampled(maxDimension: 2048).jpegData(compressionQuality: 0.8) ?? Data() }
     }
 
-    var thumbnail: UIImage? { images.first }
+    var thumbnail: UIImage? { thumbnails.first }
 }
 
 #if DEBUG
@@ -54,6 +59,30 @@ struct PersistedVideo: Identifiable, Codable {
     let videoFilename: String
     let thumbnailFilename: String
     let createdAt: Date
+}
+
+// MARK: - Image Downsampling
+
+extension UIImage {
+    func downsampled(maxDimension: CGFloat) -> UIImage {
+        let maxPixel = max(size.width * scale, size.height * scale)
+        guard maxPixel > maxDimension else { return self }
+
+        guard let data = jpegData(compressionQuality: 1.0) else { return self }
+        let options: [CFString: Any] = [
+            kCGImageSourceShouldCache: false
+        ]
+        guard let source = CGImageSourceCreateWithData(data as CFData, options as CFDictionary) else { return self }
+
+        let downsampleOptions: [CFString: Any] = [
+            kCGImageSourceCreateThumbnailFromImageAlways: true,
+            kCGImageSourceThumbnailMaxPixelSize: maxDimension,
+            kCGImageSourceCreateThumbnailWithTransform: true,
+            kCGImageSourceShouldCacheImmediately: true,
+        ]
+        guard let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, downsampleOptions as CFDictionary) else { return self }
+        return UIImage(cgImage: cgImage)
+    }
 }
 
 // MARK: - Job Summary (for history)

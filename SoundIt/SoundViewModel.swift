@@ -62,18 +62,29 @@ final class SoundViewModel {
         Task {
             do {
                 let url = try await service.generateVideo(
-                    images: entry.images,
+                    imageData: entry.uploadData,
                     text: entry.text,
                     format: entry.format
                 )
                 entry.videoFileURL = url
-                // Persist to Documents (best-effort, don't fail the generation)
-                if let persisted = try? videoStore.save(
-                    videoAt: url,
-                    text: entry.text,
-                    format: entry.format.rawValue,
-                    thumbnail: entry.images.first
-                ) {
+                // Persist to Documents off the main thread
+                let store = videoStore
+                let text = entry.text
+                let formatRaw = entry.format.rawValue
+                let thumb = entry.thumbnails.first
+                let originalTempURL = url
+                let persisted = try? await Task.detached(priority: .utility) {
+                    let result = try store.save(
+                        videoAt: originalTempURL,
+                        text: text,
+                        format: formatRaw,
+                        thumbnail: thumb
+                    )
+                    // Clean up temp file after successful persistence
+                    try? FileManager.default.removeItem(at: originalTempURL)
+                    return result
+                }.value
+                if let persisted {
                     entry.videoFileURL = videoStore.videoURL(for: persisted)
                     savedVideos.insert(persisted, at: 0)
                     if savedVideos.count > VideoStore.maxVideos {
@@ -95,7 +106,9 @@ final class SoundViewModel {
     }
 
     func deleteSavedVideo(_ video: PersistedVideo) {
-        videoStore.delete(id: video.id)
+        let store = videoStore
+        let id = video.id
+        Task.detached { store.delete(id: id) }
         savedVideos.removeAll { $0.id == video.id }
     }
 

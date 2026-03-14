@@ -1,10 +1,11 @@
 import Foundation
 import UIKit
+import os
 
 // MARK: - Protocol
 
 protocol VideoServiceProtocol {
-    func generateVideo(images: [UIImage], text: String, format: VideoFormat) async throws -> URL
+    func generateVideo(imageData: [Data], text: String, format: VideoFormat) async throws -> URL
     func listJobs() async throws -> [JobSummary]
 }
 
@@ -15,9 +16,9 @@ extension VideoServiceProtocol {
 // MARK: - Mock Service
 
 struct MockVideoService: VideoServiceProtocol {
-    func generateVideo(images: [UIImage], text: String, format: VideoFormat) async throws -> URL {
+    func generateVideo(imageData: [Data], text: String, format: VideoFormat) async throws -> URL {
         try await Task.sleep(for: .seconds(2))
-        let image = images.first ?? UIImage()
+        let image = imageData.first.flatMap { UIImage(data: $0) } ?? UIImage()
         let audioData = generateSineWave()
         return try await VideoExporter.export(image: image, audioData: audioData, format: format)
     }
@@ -99,10 +100,11 @@ struct MockVideoService: VideoServiceProtocol {
 struct APIVideoService: VideoServiceProtocol {
     let baseURL: URL
     let authManager: AuthManager
+    private static let logger = Logger(subsystem: "se.lovholm.soundit.app", category: "API")
 
-    func generateVideo(images: [UIImage], text: String, format: VideoFormat) async throws -> URL {
+    func generateVideo(imageData: [Data], text: String, format: VideoFormat) async throws -> URL {
         let token = try await authManager.idToken()
-        let jobID = try await createJob(images: images, text: text, format: format, token: token)
+        let jobID = try await createJob(imageData: imageData, text: text, format: format, token: token)
         let videoURLString = try await pollUntilComplete(jobID: jobID, token: token)
         guard let videoURL = URL(string: videoURLString) else {
             throw ServiceError.invalidResponse
@@ -125,7 +127,7 @@ struct APIVideoService: VideoServiceProtocol {
 
     // MARK: - Private
 
-    private func createJob(images: [UIImage], text: String, format: VideoFormat, token: String) async throws -> String {
+    private func createJob(imageData: [Data], text: String, format: VideoFormat, token: String) async throws -> String {
         let boundary = UUID().uuidString
         var request = URLRequest(url: baseURL.appendingPathComponent("api/v1/jobs"))
         request.httpMethod = "POST"
@@ -134,14 +136,11 @@ struct APIVideoService: VideoServiceProtocol {
 
         var body = Data()
 
-        for (index, image) in images.enumerated() {
-            guard let imageData = image.jpegData(compressionQuality: 0.8) else {
-                throw ServiceError.invalidImage
-            }
+        for (index, data) in imageData.enumerated() {
             body.appendMultipart("--\(boundary)\r\n")
             body.appendMultipart("Content-Disposition: form-data; name=\"images[]\"; filename=\"photo\(index).jpg\"\r\n")
             body.appendMultipart("Content-Type: image/jpeg\r\n\r\n")
-            body.append(imageData)
+            body.append(data)
             body.appendMultipart("\r\n")
         }
 
@@ -166,7 +165,7 @@ struct APIVideoService: VideoServiceProtocol {
         if http.statusCode == 401 { throw ServiceError.unauthorized }
         guard 200..<300 ~= http.statusCode else {
             let body = String(data: data, encoding: .utf8) ?? "no body"
-            print("[API] createJob failed: \(http.statusCode) — \(body)")
+            Self.logger.error("createJob failed: \(http.statusCode) — \(body)")
             throw ServiceError.serverError
         }
 
@@ -194,12 +193,12 @@ struct APIVideoService: VideoServiceProtocol {
             let (data, response) = try await URLSession.shared.data(for: request)
             guard let http = response as? HTTPURLResponse, 200..<300 ~= http.statusCode else {
                 let body = String(data: data, encoding: .utf8) ?? "no body"
-                print("[API] pollJob failed: \((response as? HTTPURLResponse)?.statusCode ?? 0) — \(body)")
+                Self.logger.error("pollJob failed: \((response as? HTTPURLResponse)?.statusCode ?? 0) — \(body)")
                 throw ServiceError.serverError
             }
 
             let job = try JSONDecoder().decode(JobStatusResponse.self, from: data)
-            print("[API] pollJob \(jobID): \(job.status)")
+            Self.logger.info("pollJob \(jobID): \(job.status)")
 
             switch job.status {
             case "completed":
@@ -208,7 +207,7 @@ struct APIVideoService: VideoServiceProtocol {
                 }
                 return videoURL
             case "failed":
-                print("[API] job failed: \(job.error ?? "no error message")")
+                Self.logger.error("job failed: \(job.error ?? "no error message")")
                 throw ServiceError.jobFailed(job.error ?? "Unknown error")
             case "pending", "processing":
                 delay = min(delay * 2, maxDelay)

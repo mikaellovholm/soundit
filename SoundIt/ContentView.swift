@@ -201,8 +201,8 @@ private struct EntryCell: View {
                     .frame(height: 150)
                     .clipped()
 
-                if entry.images.count > 1 {
-                    Text("\(entry.images.count)")
+                if entry.imageCount > 1 {
+                    Text("\(entry.imageCount)")
                         .font(SoundItFont.caption(11))
                         .fontWeight(.bold)
                         .foregroundStyle(SoundItColors.cream)
