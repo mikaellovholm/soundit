@@ -20,6 +20,7 @@
 		A1000100000000000000000B /* AuthManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000200000000000000000B /* AuthManager.swift */; };
 		A1000100000000000000000D /* HistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000200000000000000000D /* HistoryView.swift */; };
 		A10001000000000000000010 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000010 /* Theme.swift */; };
+		A10001000000000000000011 /* VideoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000011 /* VideoStore.swift */; };
 		A1000100000000000000000E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A1000C000000000000000001 /* FirebaseAuth */; };
 		A1000100000000000000000F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000200000000000000000F /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
@@ -39,6 +40,7 @@
 		A1000200000000000000000D /* HistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryView.swift; sourceTree = "<group>"; };
 		A1000200000000000000000F /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A10002000000000000000010 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
+		A10002000000000000000011 /* VideoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoStore.swift; sourceTree = "<group>"; };
 		A10003000000000000000001 /* SoundIt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SoundIt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -77,6 +79,7 @@
 				A10002000000000000000009 /* VideoExporter.swift */,
 				A1000200000000000000000A /* ExportVideoView.swift */,
 				A10002000000000000000010 /* Theme.swift */,
+				A10002000000000000000011 /* VideoStore.swift */,
 				A10002000000000000000008 /* Assets.xcassets */,
 				A1000200000000000000000F /* GoogleService-Info.plist */,
 			);
@@ -179,6 +182,7 @@
 				A1000100000000000000000B /* AuthManager.swift in Sources */,
 				A1000100000000000000000D /* HistoryView.swift in Sources */,
 				A10001000000000000000010 /* Theme.swift in Sources */,
+				A10001000000000000000011 /* VideoStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

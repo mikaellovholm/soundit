@@ -3,7 +3,7 @@ import AVKit
 import Photos
 
 struct PlayerView: View {
-    let entry: ImageEntry
+    let videoURL: URL
     @State private var player: AVPlayer?
     @State private var showShareSheet = false
     @State private var savedToPhotos = false
@@ -71,15 +71,11 @@ struct PlayerView: View {
                 }
             }
             .sheet(isPresented: $showShareSheet) {
-                if let url = entry.videoFileURL {
-                    ShareSheet(url: url)
-                }
+                ShareSheet(url: videoURL)
             }
         }
         .onAppear {
-            if let url = entry.videoFileURL {
-                player = AVPlayer(url: url)
-            }
+            player = AVPlayer(url: videoURL)
         }
         .onDisappear {
             player?.pause()
@@ -88,9 +84,8 @@ struct PlayerView: View {
     }
 
     private func saveToPhotos() {
-        guard let url = entry.videoFileURL else { return }
         PHPhotoLibrary.shared().performChanges {
-            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+            PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: videoURL)
         } completionHandler: { success, error in
             DispatchQueue.main.async {
                 if success {

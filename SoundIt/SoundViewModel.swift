@@ -6,11 +6,23 @@ import UIKit
 final class SoundViewModel {
     var entries: [ImageEntry] = []
     var jobs: [JobSummary] = []
+    var savedVideos: [PersistedVideo] = []
 
     private let service: VideoServiceProtocol
+    let videoStore = VideoStore()
 
     init(service: VideoServiceProtocol = MockVideoService()) {
         self.service = service
+        savedVideos = videoStore.loadAll()
+    }
+
+    var visibleSavedVideos: [PersistedVideo] {
+        let activeURLs = Set(entries.compactMap { $0.videoFileURL?.lastPathComponent })
+        return savedVideos.filter { !activeURLs.contains($0.videoFilename) }
+    }
+
+    var hasContent: Bool {
+        !entries.isEmpty || !visibleSavedVideos.isEmpty
     }
 
     #if DEBUG
@@ -54,7 +66,18 @@ final class SoundViewModel {
                     text: entry.text,
                     format: entry.format
                 )
-                entry.videoFileURL = url
+                // Persist to Documents
+                let persisted = try await videoStore.save(
+                    videoAt: url,
+                    text: entry.text,
+                    format: entry.format.rawValue
+                )
+                entry.videoFileURL = videoStore.videoURL(for: persisted)
+                savedVideos.insert(persisted, at: 0)
+                // Enforce limit in memory too
+                if savedVideos.count > VideoStore.maxVideos {
+                    savedVideos = Array(savedVideos.prefix(VideoStore.maxVideos))
+                }
             } catch {
                 entry.errorMessage = error.localizedDescription
             }
@@ -67,6 +90,11 @@ final class SoundViewModel {
             try? FileManager.default.removeItem(at: url)
         }
         entries.removeAll { $0.id == entry.id }
+    }
+
+    func deleteSavedVideo(_ video: PersistedVideo) {
+        videoStore.delete(id: video.id)
+        savedVideos.removeAll { $0.id == video.id }
     }
 
     func loadJobs() async {

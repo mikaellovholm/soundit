@@ -13,13 +13,13 @@ struct ContentView: View {
 
     enum SheetType: Identifiable {
         case compose(ImageEntry)
-        case player(ImageEntry)
+        case player(URL)
         case history
 
         var id: String {
             switch self {
             case .compose(let e): "compose-\(e.id)"
-            case .player(let e): "player-\(e.id)"
+            case .player(let url): "player-\(url.absoluteString)"
             case .history: "history"
             }
         }
@@ -28,10 +28,10 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             Group {
-                if viewModel.entries.isEmpty {
-                    emptyState
-                } else {
+                if viewModel.hasContent {
                     entryGrid
+                } else {
+                    emptyState
                 }
             }
             .soundItBackground()
@@ -116,8 +116,8 @@ struct ContentView: View {
                 case .compose(let entry):
                     ComposeView(entry: entry, viewModel: viewModel)
                         .presentationBackground(SoundItColors.cocoa)
-                case .player(let entry):
-                    PlayerView(entry: entry)
+                case .player(let url):
+                    PlayerView(videoURL: url)
                         .presentationBackground(SoundItColors.cocoa)
                 case .history:
                     HistoryView(viewModel: viewModel)
@@ -156,7 +156,9 @@ struct ContentView: View {
                             case .idle, .error:
                                 activeSheet = .compose(entry)
                             case .ready:
-                                activeSheet = .player(entry)
+                                if let url = entry.videoFileURL {
+                                    activeSheet = .player(url)
+                                }
                             case .loading:
                                 break
                             }
@@ -166,6 +168,17 @@ struct ContentView: View {
                                 Button("Edit") { activeSheet = .compose(entry) }
                             }
                             Button("Delete", role: .destructive) { viewModel.delete(entry) }
+                        }
+                }
+                ForEach(viewModel.visibleSavedVideos) { video in
+                    SavedVideoCell(video: video, videoStore: viewModel.videoStore)
+                        .onTapGesture {
+                            activeSheet = .player(viewModel.videoStore.videoURL(for: video))
+                        }
+                        .contextMenu {
+                            Button("Delete", role: .destructive) {
+                                viewModel.deleteSavedVideo(video)
+                            }
                         }
                 }
             }
@@ -237,5 +250,55 @@ private struct EntryCell: View {
         }
         .soundItCard()
         .soundItCardShadow()
+    }
+}
+
+// MARK: - Saved Video Cell
+
+private struct SavedVideoCell: View {
+    let video: PersistedVideo
+    let videoStore: VideoStore
+    @State private var thumbnail: UIImage?
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if let thumbnail {
+                Image(uiImage: thumbnail)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 150)
+                    .clipped()
+            } else {
+                Rectangle()
+                    .fill(SoundItColors.midnight)
+                    .frame(height: 150)
+                    .overlay {
+                        Image(systemName: "film")
+                            .font(.title)
+                            .foregroundStyle(SoundItColors.leather)
+                    }
+            }
+
+            HStack {
+                Image(systemName: "film")
+                    .foregroundStyle(SoundItColors.mustardGold)
+                Text(video.text)
+                    .font(SoundItFont.caption())
+                    .foregroundStyle(SoundItColors.cream)
+                    .lineLimit(1)
+                Spacer()
+            }
+            .padding(.horizontal, SoundItSpacing.xs)
+            .padding(.vertical, SoundItSpacing.xs)
+        }
+        .soundItCard()
+        .soundItCardShadow()
+        .task {
+            let thumbURL = VideoStore.videosDirectory
+                .appendingPathComponent(video.thumbnailFilename)
+            if let data = try? Data(contentsOf: thumbURL) {
+                thumbnail = UIImage(data: data)
+            }
+        }
     }
 }

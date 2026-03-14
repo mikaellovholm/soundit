@@ -45,6 +45,17 @@ extension UIImage {
 }
 #endif
 
+// MARK: - Persisted Video
+
+struct PersistedVideo: Identifiable, Codable {
+    let id: UUID
+    let text: String
+    let format: String
+    let videoFilename: String
+    let thumbnailFilename: String
+    let createdAt: Date
+}
+
 // MARK: - Job Summary (for history)
 
 struct JobSummary: Identifiable, Decodable {
