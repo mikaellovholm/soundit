@@ -51,12 +51,14 @@ enum SoundItGradients {
 // MARK: - Typography
 
 enum SoundItFont {
+    static let abrilFatface = "AbrilFatface-Regular"
+
     static func display(_ size: CGFloat = 34) -> Font {
-        .system(size: size, weight: .black)
+        .custom(abrilFatface, size: size)
     }
 
     static func headline(_ size: CGFloat = 20) -> Font {
-        .system(size: size, weight: .bold)
+        .custom(abrilFatface, size: size)
     }
 
     static func body(_ size: CGFloat = 16) -> Font {
@@ -156,33 +158,11 @@ struct SoundItStatusBadge: View {
 struct SoundItLogo: View {
     var size: CGFloat = 24
 
-    private var font: Font {
-        .system(size: size, weight: .black, design: .default).width(.expanded)
-    }
-
     var body: some View {
-        ZStack {
-            // 3D extrusion shadow
-            Text("SOUND IT")
-                .font(font)
-                .italic()
-                .tracking(size * 0.08)
-                .foregroundStyle(SoundItColors.shaftPurple.opacity(0.4))
-                .offset(x: size * -0.08, y: size * 0.08)
-            // Mid layer
-            Text("SOUND IT")
-                .font(font)
-                .italic()
-                .tracking(size * 0.08)
-                .foregroundStyle(SoundItColors.shaftPurple.opacity(0.7))
-                .offset(x: size * -0.04, y: size * 0.04)
-            // Main text
-            Text("SOUND IT")
-                .font(font)
-                .italic()
-                .tracking(size * 0.08)
-                .foregroundStyle(SoundItColors.hotWhite)
-        }
+        Image("SoundItLogo")
+            .resizable()
+            .scaledToFit()
+            .frame(height: size)
     }
 }
 

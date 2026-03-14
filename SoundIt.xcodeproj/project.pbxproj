@@ -23,6 +23,7 @@
 		A10001000000000000000011 /* VideoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000011 /* VideoStore.swift */; };
 		A1000100000000000000000E /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = A1000C000000000000000001 /* FirebaseAuth */; };
 		A1000100000000000000000F /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A1000200000000000000000F /* GoogleService-Info.plist */; };
+		A10001000000000000000012 /* AbrilFatface-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A10002000000000000000012 /* AbrilFatface-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -41,6 +42,8 @@
 		A1000200000000000000000F /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A10002000000000000000010 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		A10002000000000000000011 /* VideoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoStore.swift; sourceTree = "<group>"; };
+		A10002000000000000000012 /* AbrilFatface-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "AbrilFatface-Regular.ttf"; sourceTree = "<group>"; };
+		A10002000000000000000013 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A10003000000000000000001 /* SoundIt.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SoundIt.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -82,6 +85,8 @@
 				A10002000000000000000011 /* VideoStore.swift */,
 				A10002000000000000000008 /* Assets.xcassets */,
 				A1000200000000000000000F /* GoogleService-Info.plist */,
+				A10002000000000000000012 /* AbrilFatface-Regular.ttf */,
+				A10002000000000000000013 /* Info.plist */,
 			);
 			path = SoundIt;
 			sourceTree = "<group>";
@@ -160,6 +165,7 @@
 			files = (
 				A10001000000000000000008 /* Assets.xcassets in Resources */,
 				A1000100000000000000000F /* GoogleService-Info.plist in Resources */,
+				A10001000000000000000012 /* AbrilFatface-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -315,6 +321,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = APN2E86BRE;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SoundIt/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SoundIt needs camera access to take photos for soundtrack generation.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "SoundIt needs access to save exported videos to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "SoundIt needs photo library access to select photos for soundtrack generation.";
@@ -342,6 +349,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = APN2E86BRE;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SoundIt/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "SoundIt needs camera access to take photos for soundtrack generation.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "SoundIt needs access to save exported videos to your photo library.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "SoundIt needs photo library access to select photos for soundtrack generation.";

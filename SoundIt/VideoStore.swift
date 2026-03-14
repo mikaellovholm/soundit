@@ -1,5 +1,4 @@
 import Foundation
-import AVFoundation
 import UIKit
 
 struct VideoStore: Sendable {
@@ -29,7 +28,7 @@ struct VideoStore: Sendable {
         return videos.sorted { $0.createdAt > $1.createdAt }
     }
 
-    func save(videoAt sourceURL: URL, text: String, format: String) async throws -> PersistedVideo {
+    func save(videoAt sourceURL: URL, text: String, format: String, thumbnail: UIImage?) throws -> PersistedVideo {
         try ensureDirectory()
 
         let id = UUID()
@@ -39,8 +38,7 @@ struct VideoStore: Sendable {
         let destVideo = Self.videosDirectory.appendingPathComponent(videoFilename)
         try FileManager.default.copyItem(at: sourceURL, to: destVideo)
 
-        let thumbImage = await generateThumbnail(for: destVideo)
-        if let data = thumbImage?.jpegData(compressionQuality: 0.7) {
+        if let data = thumbnail?.jpegData(compressionQuality: 0.7) {
             let destThumb = Self.videosDirectory.appendingPathComponent(thumbFilename)
             try data.write(to: destThumb)
         }
@@ -93,15 +91,4 @@ struct VideoStore: Sendable {
         try? fm.removeItem(at: Self.videosDirectory.appendingPathComponent(video.thumbnailFilename))
     }
 
-    private func generateThumbnail(for url: URL) async -> UIImage? {
-        let asset = AVAsset(url: url)
-        let generator = AVAssetImageGenerator(asset: asset)
-        generator.appliesPreferredTrackTransform = true
-        generator.maximumSize = CGSize(width: 300, height: 300)
-        let time = CMTime(seconds: 0, preferredTimescale: 600)
-        guard let cgImage = try? generator.copyCGImage(at: time, actualTime: nil) else {
-            return nil
-        }
-        return UIImage(cgImage: cgImage)
-    }
 }

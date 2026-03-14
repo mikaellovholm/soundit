@@ -66,17 +66,19 @@ final class SoundViewModel {
                     text: entry.text,
                     format: entry.format
                 )
-                // Persist to Documents
-                let persisted = try await videoStore.save(
+                entry.videoFileURL = url
+                // Persist to Documents (best-effort, don't fail the generation)
+                if let persisted = try? videoStore.save(
                     videoAt: url,
                     text: entry.text,
-                    format: entry.format.rawValue
-                )
-                entry.videoFileURL = videoStore.videoURL(for: persisted)
-                savedVideos.insert(persisted, at: 0)
-                // Enforce limit in memory too
-                if savedVideos.count > VideoStore.maxVideos {
-                    savedVideos = Array(savedVideos.prefix(VideoStore.maxVideos))
+                    format: entry.format.rawValue,
+                    thumbnail: entry.images.first
+                ) {
+                    entry.videoFileURL = videoStore.videoURL(for: persisted)
+                    savedVideos.insert(persisted, at: 0)
+                    if savedVideos.count > VideoStore.maxVideos {
+                        savedVideos = Array(savedVideos.prefix(VideoStore.maxVideos))
+                    }
                 }
             } catch {
                 entry.errorMessage = error.localizedDescription
