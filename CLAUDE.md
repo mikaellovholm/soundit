@@ -39,6 +39,10 @@ Two project-scoped MCP servers are configured (in `~/.claude.json` under this pr
 - **apple-docs** — Apple Developer Documentation search (SwiftUI, UIKit, HIG, WWDC). Use to look up current Apple APIs and patterns. `npx @kimsungwhee/apple-docs-mcp@latest`
 - **ios-simulator** — Interact with iOS simulators: inspect UI, take screenshots, control elements. Requires Facebook IDB (`pip3 install fb-idb`). `npx ios-simulator-mcp`
 
+## Style Guide
+
+The app's visual language is inspired by 1970s Blaxploitation cinema. See `STYLE_GUIDE.md` for the full design spec (colors, typography, spacing, components). The programmatic theme lives in `Theme.swift` — use `SoundItColors`, `SoundItGradients`, `SoundItFont`, `SoundItSpacing`, and the provided `ButtonStyle`/`ViewModifier` types instead of hardcoded colors or system defaults.
+
 ## Key quirks
 
 - `ComposeView` lives in `ExportVideoView.swift` (file kept to avoid pbxproj churn).
