@@ -18,6 +18,7 @@ struct PlayerView: View {
                     VideoPlayer(player: player)
                         .clipShape(RoundedRectangle(cornerRadius: SoundItRadius.card))
                         .soundItCardShadow()
+                        .frame(maxHeight: .infinity)
                 } else {
                     VStack(spacing: SoundItSpacing.md) {
                         Image(systemName: "film")
@@ -79,6 +80,7 @@ struct PlayerView: View {
             try? AVAudioSession.sharedInstance().setCategory(.playback)
             try? AVAudioSession.sharedInstance().setActive(true)
             player = AVPlayer(url: videoURL)
+            player?.play()
         }
         .onDisappear {
             player?.pause()

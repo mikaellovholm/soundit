@@ -74,15 +74,12 @@ final class SoundViewModel {
                 let thumb = entry.thumbnails.first
                 let originalTempURL = url
                 let persisted = try? await Task.detached(priority: .utility) {
-                    let result = try store.save(
+                    try store.save(
                         videoAt: originalTempURL,
                         text: text,
                         format: formatRaw,
                         thumbnail: thumb
                     )
-                    // Clean up temp file after successful persistence
-                    try? FileManager.default.removeItem(at: originalTempURL)
-                    return result
                 }.value
                 if let persisted {
                     entry.videoFileURL = videoStore.videoURL(for: persisted)
@@ -90,6 +87,8 @@ final class SoundViewModel {
                     if savedVideos.count > VideoStore.maxVideos {
                         savedVideos = Array(savedVideos.prefix(VideoStore.maxVideos))
                     }
+                    // Clean up temp file now that URL points to persisted copy
+                    Task.detached { try? FileManager.default.removeItem(at: originalTempURL) }
                 }
             } catch {
                 entry.errorMessage = error.localizedDescription
